@@ -1,6 +1,6 @@
 提示：IP地址每天可能都在发生变化，使用静态IP库更加不稳定。
-#如何使用
-## IPIP
+#1、如何使用
+### 1.1、IPIP
 IPIP 官网地址： http://www.ipip.net/
 
 * 下载IP库 http://s.qdcdn.com/17mon/17monipdb.zip
@@ -34,7 +34,7 @@ IPIP 官网地址： http://www.ipip.net/
 城市名:    武汉  
 ```
 
-##GeoIp2
+###1.2、 GeoIp2
 
 GeoIp2 官网地址 ：
 
@@ -96,15 +96,16 @@ POM 文件增加
         try {
             System.out.println("大陆名:\t"+ res.getContinent().getName());
             System.out.println("国家名:\t"+res.getCountry().getName());
+            System.out.println("中文国家名:\t"+res.getCountry().getNames().get("zh-CN"));
             System.out.println("国家名缩写:\t"+res.getCountry().getIsoCode());
             System.out.println("省份:\t"+res.getLeastSpecificSubdivision().getName());
             System.out.println("经度:\t"+res.getLocation().getLatitude());
             System.out.println("维度:\t"+res.getLocation().getLongitude());
             System.out.println("时区:\t"+res.getLocation().getTimeZone());
-            System.out.println("中文省份名:\t"+res.getLeastSpecificSubdivision().getNames().get("ja"));
+            System.out.println("中文省份名:\t"+res.getLeastSpecificSubdivision().getNames().get("zh-CN"));
             System.out.println("城市名：\t"+res.getCity().getName());
-            System.out.println("中文城市名:\t"+res.getCity().getNames().get("ja"));
-            System.out.println("Traits info:\t"+res.getTraits());
+            System.out.println("中文城市名:\t"+res.getCity().getNames().get("zh-CN"));
+            System.out.println("Traits info:\t"+res.getTraits());  
             //等等
         } catch (Exception e) {
             // TODO Auto-generated catch block
@@ -119,6 +120,7 @@ POM 文件增加
 ```
 大陆名:    Asia
 国家名:    China
+中文国家名:    中国
 国家名缩写:    CN
 省份:    Hubei
 经度:    30.5801
@@ -126,15 +128,19 @@ POM 文件增加
 时区:    Asia/Shanghai
 中文省份名:    湖北省
 城市名：    Wuhan
-中文城市名:    武漢市
-Traits info:    Traits [ipAddress=183.94.20.255, anonymousProxy=false, satelliteProvider=false, ]  
+中文城市名:    武汉
+Traits info:    Traits [ipAddress=183.94.20.255, anonymousProxy=false, satelliteProvider=false, ] 
 
 ```
 
 
-#比较
+#2、比较
+** 对1W 个真实有效IP进行测试 **
 
-对1W 个真实有效IP进行测试
+   2.1 查询速度测试（性能测试）
+   2.2 查询出来的数据地域的流失情况。（国家、省份、城市）
+   2.3 完整性测试
+   2.4 正确性测试
 
 测试程序输入结果如下：
 
@@ -188,10 +194,10 @@ Traits info:    Traits [ipAddress=183.94.20.255, anonymousProxy=false, satellite
 
 
 
-** 查询速度（毫秒） **
+####　** 2.1 查询速度（毫秒） **
+计算方式： 数量/耗时 = 每毫米检出数量
 
-
- 数量\类型| IPIP | GeoIP2 |
+ 数量\类型| IPIP | GeoIP2 
 ----|----
   100| 16.67% | 0.56% 
 1000|  66.67% |  9.43% 
@@ -199,28 +205,37 @@ Traits info:    Traits [ipAddress=183.94.20.255, anonymousProxy=false, satellite
 100000|145.34%|19.70%
 
 
-** 中国地区 完整性测试 （流失率的意义不大了，省份不存在或省份名称等于国家名称都表示数据不完整）**  
+#### ** 2.2A 中国地区 完整性测试 （流失率的意义不大了，省份不存在或省份名称等于国家名称都表示数据不完整）**
+计算方式： IP地址为中国地区，省份名称不为空且国家名称不等于省份名称的数量/数量 = 完整比例
 
- 数量\类型| IPIP | GeoIP2 |
+ 数量\类型| IPIP | GeoIP2 
 ----|----
-  100| 0.0% | 0.9% 
-1000|  0.0% |  0.13% 
-10000| 0.0% | 0.14% 
+  100| 1.0% | 0.91% 
+1000|  1.0% |  0.87% 
+10000| 1.0% | 0.86% 
 
 
-** 非中国地区 完整性测试 **
+#### ** 2.2B 非中国地区 完整性测试 **
+计算方式： IP地址为非中国地区，省份名称不为空且国家名称不等于省份名称的数量/数量 = 完整比例
 
- 数量\类型| IPIP | GeoIP2 |
+ 数量\类型| IPIP | GeoIP2 
 ----|----
-  100| 1.0 | 0.50% 
-1000|  1.0% |  0.48% 
-10000| 1.0% | 0.50% 
+  100| 0.0% | 0.51% 
+1000|  0.0% |  0.52% 
+10000| 0.0% | 0.50% 
+
+#### **2.3 准确度测试 **
+** 计算方式： IPIP查询国家 != GeoIP查询国家  的IP到新浪网络IP库查询。 查询出来的结果与IPIP国家和GeoIP国家匹配。 数量最多的准确度较高。**
+> eg: 192.0.0.1 IPIP为中国，GeoIP为美国 新浪IP库为美国。 者IPIP计算+1。 10000IP查询结果后，数量最多的为准确度较高的。
+
+`对100000个IP进行查询，除去失效IP。 两个库的查询结果为100%相同。
+由于IPIP对非中国地区的省份几乎不支持。 所以不进行基于省份的精确的。`
 
 
 
 #总结 （使用和测试）
 
- --- | IPIP | GeoIP2 |
+ --- | IPIP | GeoIP2 
 ----|----
  数据丰富性| 简略 | 详细
  查询速度|  略优 |  缓慢
@@ -234,4 +249,4 @@ Traits info:    Traits [ipAddress=183.94.20.255, anonymousProxy=false, satellite
 4. IPIP对非中国地区较差，如果只获取国家名还可以，想要获取城市名，几乎是不能用的。GeoIP2主要是省份城市丢失导致完整性较差，但能够使用。
 5. GeoIP2数据库中会出现IP不存在情况，需要自己做异常捕获，IPIP库中不会存在IP不存在。
 
-** 如果检查国内IP使用IPIP还可以，如果要检查国外IP，IPIP就无能为力了。 (如上并没有对比IP检查的正确性)**
+** 如果检查中国IP使用IPIP还可以，如果要检查国外IP，IPIP就无能为力了,因为IPIP查询不到非中国省份和城市。**
